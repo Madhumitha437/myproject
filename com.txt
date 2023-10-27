@@ -1,0 +1,148 @@
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
+#include<stdlib.h>
+struct quadraples
+{
+        char result[20];
+        char operator[3];
+        char operand1[10];
+        char operand2[10];
+};
+void display(struct quadraples *q,int n)
+{
+   int i;
+   printf("Index\tOperator\tOperand1\tOperand2\tResult\n");
+   for(i=0;i<n;i++)
+   {
+      printf("%d\t%s\t\t%s\t\t%s\t\t%s\n\n",i+1,q[i].operator,q[i].operand1,q[i].operand2,q[i].result);
+   }
+}
+void display1(struct quadraples *q,int n)
+{
+   int i;
+   printf("\nThree Address Code\n\n");
+   for(i=0;i<n;i++)
+   {
+      if(strcmp(q[i].operand2,"-")==0||strcmp(q[i].operand2,"---")==0){
+         printf("%s=%s\n\n",q[i].result,q[i].operand1);
+   }
+   else{
+    printf("%s=%s%s%s\n\n",q[i].result,q[i].operand1,q[i].operator,q[i].operand2);
+   }
+   }
+   printf("\n");
+}
+int isNumber(char c)
+{
+ if(c=='0' ||c=='1' ||c=='2' ||c=='3' ||c=='4' ||c=='5' ||c=='6' ||c=='7' ||c=='8' ||c=='9' )
+  return 1;
+ else
+  return 0;
+}
+int stringToNum(char *stringNum)
+{
+ int i,number=0,n,temp;
+ n = strlen(stringNum);
+ number=atoi(stringNum);
+ return number;
+}
+void eliminate(struct quadraples *q,int n)
+{
+   int i,j,k;
+   for(i=0;i<n-1;i++)
+   {
+      for(j=i+1;j<n;j++)
+      {
+         if((strcmp(q[i].operator,q[j].operator)+strcmp(q[i].operand1,q[j].operand1)+strcmp(q[i].operand2,q[j].operand2))==0)
+         {
+            int flag=0;
+            for(k=i;k<j-1;k++)
+            {
+               if((strcmp(q[k].result,q[k+1].result)==0)||(strcmp(q[k].operand1,q[k+1].result)==0)||(strcmp(q[k].operand2,q[k+1].result)==0))
+               {
+                  flag=1;
+               }
+            }
+            if(flag==0)
+            {
+               strcpy(q[j].operand1,q[i].result);
+               strcpy(q[j].operand2,"-");
+               strcpy(q[j].operator,"=");
+            }
+         }
+      }
+   }
+}
+int operateNumbers(char *opr,int n1,int n2)
+{
+ if(strcmp(opr,"+")==0)
+  return n1+n2;
+ else if(strcmp(opr,"-")==0)
+  return n1-n2;
+ else if(strcmp(opr,"*")==0)
+  return n1*n2;
+ else if(strcmp(opr,"/")==0)
+  return n1/n2;
+ else if(strcmp(opr,"%")==0)
+  return n1%n2;
+}
+
+void applyConstantFolding(struct quadraples *q,int n )
+{
+ int i,num1,num2,res;
+ for(i=0;i<n;i++){
+  if( (isNumber(q[i].operand1[0])) && (isNumber(q[i].operand2[0]))){
+   num1 = stringToNum(q[i].operand1);
+   num2 = stringToNum(q[i].operand2);
+   res = operateNumbers(q[i].operator,num1,num2);
+   sprintf(q[i].operand1,"%d",res);
+   strcpy(q[i].operand2,"---");
+   strcpy(q[i].operator,"=");
+  }
+ }
+}
+void applyConstantPropagation(struct quadraples *q,int n){
+ int i,j;
+ for(i=0;i<n-1;i++){
+  for(j=i+1;j<n;j++){
+   if(strcmp(q[i].result,q[j].operand1)==0 && strcmp(q[i].operand2,"---")==0){
+    strcpy(q[j].operand1,q[i].operand1);
+    display(q,n);
+    applyConstantFolding(q,n);
+   }
+   if(strcmp(q[i].result,q[j].operand2)==0 && strcmp(q[i].operand2,"---")==0){
+    strcpy(q[j].operand2,q[i].operand1);
+    display(q,n);
+    applyConstantFolding(q,n);
+   }
+  }
+ }
+}
+int main()
+{
+   int i,n;
+   printf("Enter the number of quadraples:\n");
+   scanf("%d",&n);
+   struct quadraples quad[n];
+   printf("Format for Quadraple : operator operand1 operand2 result\n");
+   for(i=0;i<n;i++)
+   {
+      printf("Enter the quadraple %d:",i+1);
+      scanf("%s %s %s %s",quad[i].operator,quad[i].operand1,quad[i].operand2,quad[i].result);
+   }
+   display1(quad,n);
+   display(quad,n);
+   eliminate(quad,n);
+   printf("-----------------------------------------------\n");
+   printf("\nAfter Common Subexpression elimination\n");
+   display1(quad,n);
+   display(quad,n);
+   printf("-----------------------------------------------\n");
+   printf("After Constant folding  & constant propagation\n\n");
+   applyConstantFolding(quad,n);
+   applyConstantPropagation(quad,n);
+   display1(quad,n);
+   printf("-----------------------------------------------\n");
+   return 0;
+}
